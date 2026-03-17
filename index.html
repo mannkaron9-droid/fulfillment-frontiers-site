@@ -5,17 +5,22 @@
 <title>Fulfillment Frontiers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Google Maps -->
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script>
+
+<!-- Stripe -->
+<script src="https://js.stripe.com/v3/"></script>
+
 <style>
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: Arial;
   background: black;
   color: white;
   text-align: center;
-  overflow-x: hidden;
 }
 
-/* 🔥 Animated background */
+/* Animated background */
 body::before {
   content: "";
   position: fixed;
@@ -31,134 +36,36 @@ body::before {
   animation: moveBg 20s linear infinite;
   z-index: -1;
 }
-
 @keyframes moveBg {
-  from { transform: translate(0,0); }
   to { transform: translate(-200px,-200px); }
 }
 
-.container {
-  padding: 60px 20px;
-}
+.container { padding: 50px 20px; }
 
-/* LOGO */
 .logo {
-  max-width: 300px;
-  filter: drop-shadow(0 0 15px rgba(255,215,0,0.6));
-  transition: 0.3s;
-}
-.logo:hover {
-  transform: scale(1.05);
-}
-
-h1 {
-  font-size: 44px;
-  font-weight: 800;
-  letter-spacing: 2px;
-}
-
-p {
-  color: #ccc;
-  font-size: 18px;
+  max-width: 280px;
+  filter: drop-shadow(0 0 15px gold);
 }
 
 .btn {
-  background: #FFD700;
-  color: black;
-  padding: 15px 30px;
-  margin-top: 25px;
-  display: inline-block;
-  text-decoration: none;
+  background: gold;
+  padding: 15px 25px;
+  margin: 10px;
+  border: none;
   font-weight: bold;
-  border-radius: 6px;
-  transition: 0.3s;
   cursor: pointer;
 }
-.btn:hover {
-  transform: scale(1.05);
-  background: #e6c200;
-}
 
-.section {
-  margin-top: 80px;
-}
+.section { margin-top: 70px; }
 
-.divider {
-  width: 60px;
-  height: 3px;
-  background: #FFD700;
-  margin: 20px auto;
-}
-
-/* SERVICES GRID */
-.services {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
-}
-
-.card {
-  background: #111;
-  padding: 20px;
-  border-radius: 10px;
-  width: 250px;
-  transition: 0.3s;
-}
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 0 20px rgba(255,215,0,0.2);
-}
-
-/* FORM */
-input, button {
+input {
   width: 90%;
   max-width: 400px;
   padding: 12px;
-  margin: 10px 0;
+  margin: 10px;
+  background: #111;
+  color: white;
   border: none;
-  border-radius: 5px;
-}
-input {
-  background: #111;
-  color: white;
-}
-
-/* 🔥 POPUP MODAL */
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 10;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.8);
-}
-
-.modal-content {
-  background: #111;
-  margin: 10% auto;
-  padding: 30px;
-  width: 90%;
-  max-width: 400px;
-  border-radius: 10px;
-  text-align: center;
-}
-
-.close {
-  float: right;
-  font-size: 22px;
-  cursor: pointer;
-  color: #aaa;
-}
-
-.close:hover {
-  color: white;
-}
-
-a {
-  color: #00aaff;
 }
 </style>
 </head>
@@ -167,77 +74,126 @@ a {
 
 <div class="container">
 
-  <!-- LOGO -->
-  <img src="logo.png" class="logo">
+<img src="logo.png" class="logo">
 
-  <!-- HERO -->
-  <h1>FAST. RELIABLE. UNSTOPPABLE.</h1>
-  <div class="divider"></div>
-  <p>Same-Day Delivery • Last-Mile Logistics • Scheduled Routes</p>
+<h1>FAST. RELIABLE. UNSTOPPABLE.</h1>
+<p>Same-Day Delivery • Last-Mile Logistics • Scheduled Routes</p>
 
-  <div>
-    <a href="tel:2673388160" class="btn">Call Now</a>
-    <button class="btn" onclick="openModal()">Get Quote</button>
-  </div>
+<button class="btn" onclick="openModal()">Get Quote</button>
+<a href="tel:2673388160" class="btn">Call Now</a>
 
-  <!-- SERVICES -->
-  <div class="section">
-    <h2>Services</h2>
-    <div class="divider"></div>
+<!-- 🚀 AUTO PRICE -->
+<div class="section">
+<h2>Instant Quote</h2>
 
-    <div class="services">
-      <div class="card">Same-Day Delivery</div>
-      <div class="card">Scheduled Routes</div>
-      <div class="card">Last-Mile Logistics</div>
-    </div>
-  </div>
+<input id="pickup" placeholder="Pickup Address">
+<input id="dropoff" placeholder="Dropoff Address">
 
-  <!-- CONTACT -->
-  <div class="section">
-    <h2>Contact</h2>
-    <div class="divider"></div>
+<button class="btn" onclick="getDistance()">Calculate Price</button>
 
-    <p><a href="tel:2673388160">267-338-8160</a></p>
-    <p>fulfillmentfrontiersbookings@gmail.com</p>
-  </div>
+<p id="priceResult"></p>
+</div>
+
+<!-- 📅 BOOKING -->
+<div class="section">
+<h2>Book Delivery</h2>
+
+<form name="booking" method="POST" data-netlify="true">
+<input type="hidden" name="form-name" value="booking">
+
+<input type="text" name="name" placeholder="Your Name" required>
+<input type="datetime-local" name="date" required>
+<input type="text" name="pickup" placeholder="Pickup Address" required>
+<input type="text" name="dropoff" placeholder="Dropoff Address" required>
+
+<button class="btn">Schedule</button>
+</form>
+</div>
+
+<!-- 🔐 LOGIN -->
+<div class="section">
+<h2>Customer Login</h2>
+
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+
+<button class="btn" onclick="login()">Login</button>
+</div>
+
+<!-- 🚚 TRACKING -->
+<div class="section">
+<h2>Track Driver</h2>
+
+<iframe width="90%" height="300"
+style="border-radius:10px"
+src="https://www.google.com/maps?q=New%20Jersey&output=embed">
+</iframe>
+</div>
+
+<!-- 💳 PAYMENT -->
+<div class="section">
+<h2>Payment</h2>
+
+<button class="btn" onclick="payNow()">Pay Now</button>
+</div>
 
 </div>
 
-<!-- 🔥 MODAL -->
-<div id="quoteModal" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeModal()">&times;</span>
-    <h2>Request a Quote</h2>
+<!-- MODAL -->
+<div id="quoteModal" style="display:none;position:fixed;width:100%;height:100%;background:black;">
+<div style="margin:100px auto;background:#111;padding:20px;width:90%;max-width:400px;">
+<h2>Request Quote</h2>
 
-    <form name="quote" method="POST" data-netlify="true">
-      <input type="hidden" name="form-name" value="quote">
+<form name="quote" method="POST" data-netlify="true">
+<input type="hidden" name="form-name" value="quote">
 
-      <input type="text" name="name" placeholder="Your Name" required>
-      <input type="tel" name="phone" placeholder="Phone Number" required>
-      <input type="text" name="details" placeholder="Delivery Details" required>
+<input type="text" name="name" placeholder="Name">
+<input type="tel" name="phone" placeholder="Phone">
+<input type="text" name="details" placeholder="Details">
 
-      <button type="submit" class="btn">Submit</button>
-    </form>
-  </div>
+<button class="btn">Submit</button>
+</form>
+
+<button onclick="closeModal()">Close</button>
+</div>
 </div>
 
 <script>
-function openModal() {
-  document.getElementById("quoteModal").style.display = "block";
+function openModal(){document.getElementById("quoteModal").style.display="block";}
+function closeModal(){document.getElementById("quoteModal").style.display="none";}
+
+// 🚀 Google Distance
+function getDistance() {
+  let service = new google.maps.DistanceMatrixService();
+
+  service.getDistanceMatrix({
+    origins: [document.getElementById("pickup").value],
+    destinations: [document.getElementById("dropoff").value],
+    travelMode: 'DRIVING',
+  }, function(response) {
+
+    let distanceText = response.rows[0].elements[0].distance.text;
+    let miles = parseFloat(distanceText.replace(" mi",""));
+
+    let price = (miles * 2) + 10;
+
+    document.getElementById("priceResult").innerText =
+      distanceText + " → $" + price.toFixed(2);
+  });
 }
 
-function closeModal() {
-  document.getElementById("quoteModal").style.display = "none";
+// 🔐 LOGIN (placeholder)
+function login(){
+  alert("Connect Firebase to enable login");
 }
 
-window.onclick = function(event) {
-  let modal = document.getElementById("quoteModal");
-  if (event.target == modal) {
-    modal.style.display = "none";
-  }
+// 💳 STRIPE (placeholder)
+function payNow(){
+  alert("Connect Stripe backend to enable payments");
 }
 </script>
 
 </body>
 </html>
+
 
